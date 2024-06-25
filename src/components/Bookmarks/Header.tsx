@@ -1,11 +1,11 @@
 /* eslint-disable prettier/prettier */
 
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
 
-import { useReader } from '@epubjs-react-native/core';
-import { IconButton } from 'react-native-paper';
+import {useReader} from '@epubjs-react-native/core';
+import {IconButton} from 'react-native-paper';
 
 interface Props {
   onOpenBookmarksList: () => void;
@@ -46,7 +46,7 @@ export function Header({onOpenBookmarksList}: Props) {
   return (
     <View style={styles.container}>
       <IconButton
-        icon={'camera'}
+        icon="arrow-left"
         size={22}
         onPress={() => navigation.goBack()}
       />

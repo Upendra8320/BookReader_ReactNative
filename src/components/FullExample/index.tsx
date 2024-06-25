@@ -184,6 +184,15 @@ function Component() {
               return true;
             },
           },
+          {
+            label: 'Copy',
+            action: (cfiRange, text) => {
+              setSelection({cfiRange, text});
+              addAnnotation('highlight', cfiRange, {isTemp: true});
+              annotationsListRef.current?.present();
+              return true;
+            },
+          },
         ]}
         onDoublePress={() => setIsFullScreen(oldState => !oldState)}
       />
