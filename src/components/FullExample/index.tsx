@@ -2,7 +2,7 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable prettier/prettier */
 import React, {useState} from 'react';
-import {useWindowDimensions} from 'react-native';
+import {ToastAndroid, useWindowDimensions} from 'react-native';
 import {
   ReaderProvider,
   Reader,
@@ -22,6 +22,9 @@ import {SearchList} from '../Search/SearchList';
 import {TableOfContents} from '../TableOfContents/TableOfContents';
 import {COLORS} from '../Annotations/AnnotationForm';
 import {AnnotationsList} from '../Annotations/AnnotationList';
+import {Clipboard, Share} from 'react-native';
+import RNFS from 'react-native-fs';
+
 
 function Component() {
   const {width, height} = useWindowDimensions();
@@ -85,6 +88,63 @@ function Component() {
     changeFontFamily(nextFontFamily);
   };
 
+  const onShare = async (text: any) => {
+    try {
+      const result = await Share.share({
+        message: text,
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error) {
+      console.log((error as any).message);
+      // Alert.alert(error.message);
+    }
+  };
+
+  // const [filePath, setFilePath] = React.useState('');
+
+  // React.useEffect(() => {
+  //   const checkAndDownloadFile = async () => {
+  //     const downloadDest = `${RNFS.DocumentDirectoryPath}/book.epub`;
+  //     const fileExists = await RNFS.exists(downloadDest);
+
+  //     if (fileExists) {
+  //       console.log('File already exists: ', downloadDest);
+  //       setFilePath(downloadDest);
+  //     } else {
+  //       const url =
+  //         'https://drive.google.com/uc?export=download&id=1e7MVXj3CrNPX3uurFZ_l-pjwHxLl1Nf3';
+
+  //       try {
+  //         const download = RNFS.downloadFile({
+  //           fromUrl: url,
+  //           toFile: downloadDest,
+  //         });
+
+  //         const result = await download.promise;
+
+  //         if (result.statusCode === 200) {
+  //           console.log('File downloaded successfully: ', downloadDest);
+  //           setFilePath(downloadDest);
+  //         } else {
+  //           console.log('Failed to download file: ', result.statusCode);
+  //         }
+  //       } catch (error) {
+  //         console.log('Error downloading file: ', error);
+  //       }
+  //     }
+  //   };
+
+  //   checkAndDownloadFile();
+  // }, []);
+
   return (
     <GestureHandlerRootView
       style={{
@@ -110,34 +170,37 @@ function Component() {
       )}
 
       <Reader
-        src="https://s3.amazonaws.com/moby-dick/OPS/package.opf"
+        // src="https://s3.amazonaws.com/moby-dick/OPS/package.opf"
+        src="https://epubjs-react-native.s3.amazonaws.com/failing-forward.epub"
+        // src={filePath}
         width={width}
         height={!isFullScreen ? height * 0.75 : height}
         fileSystem={useFileSystem}
         defaultTheme={Themes.DARK}
-        waitForLocationsReady
-        initialLocation="introduction_001.xhtml"
-        initialAnnotations={[
-          // Chapter 1
-          {
-            cfiRange: 'epubcfi(/6/10!/4/2/4,/1:0,/1:319)',
-            data: {},
-            sectionIndex: 4,
-            styles: {color: '#23CE6B'},
-            cfiRangeText:
-              'The pale Usher—threadbare in coat, heart, body, and brain; I see him now. He was ever dusting his old lexicons and grammars, with a queer handkerchief, mockingly embellished with all the gay flags of all the known nations of the world. He loved to dust his old grammars; it somehow mildly reminded him of his mortality.',
-            type: 'highlight',
-          },
-          // Chapter 5
-          {
-            cfiRange: 'epubcfi(/6/22!/4/2/4,/1:80,/1:88)',
-            data: {},
-            sectionIndex: 3,
-            styles: {color: '#CBA135'},
-            cfiRangeText: 'landlord',
-            type: 'highlight',
-          },
-        ]}
+         flow="scrolled-doc"
+        // waitForLocationsReady
+        // initialLocation="introduction_001.xhtml"
+        // initialAnnotations={[
+        //   // Chapter 1
+        //   {
+        //     cfiRange: 'epubcfi(/6/10!/4/2/4,/1:0,/1:319)',
+        //     data: {},
+        //     sectionIndex: 4,
+        //     styles: {color: '#23CE6B'},
+        //     cfiRangeText:
+        //       'The pale Usher—threadbare in coat, heart, body, and brain; I see him now. He was ever dusting his old lexicons and grammars, with a queer handkerchief, mockingly embellished with all the gay flags of all the known nations of the world. He loved to dust his old grammars; it somehow mildly reminded him of his mortality.',
+        //     type: 'highlight',
+        //   },
+        //   // Chapter 5
+        //   {
+        //     cfiRange: 'epubcfi(/6/22!/4/2/4,/1:80,/1:88)',
+        //     data: {},
+        //     sectionIndex: 3,
+        //     styles: {color: '#CBA135'},
+        //     cfiRangeText: 'landlord',
+        //     type: 'highlight',
+        //   },
+        // ]}
         onAddAnnotation={annotation => {
           if (annotation.type === 'highlight' && annotation.data?.isTemp) {
             setTempMark(annotation);
@@ -187,9 +250,18 @@ function Component() {
           {
             label: 'Copy',
             action: (cfiRange, text) => {
-              setSelection({cfiRange, text});
-              addAnnotation('highlight', cfiRange, {isTemp: true});
-              annotationsListRef.current?.present();
+              Clipboard.setString(text);
+              ToastAndroid.show('Copied to clipboard', ToastAndroid.SHORT);
+              // setSelection({cfiRange, text});
+              // addAnnotation('highlight', cfiRange, {isTemp: true});
+              // annotationsListRef.current?.present();
+              return true;
+            },
+          },
+          {
+            label: 'Share',
+            action: (cfiRange, text) => {
+              onShare(text);
               return true;
             },
           },
@@ -225,7 +297,9 @@ function Component() {
           setTempMark(null);
           setSelection(null);
           setSelectedAnnotation(undefined);
-          if (tempMark) {removeAnnotation(tempMark);}
+          if (tempMark) {
+            removeAnnotation(tempMark);
+          }
           annotationsListRef.current?.dismiss();
         }}
       />
